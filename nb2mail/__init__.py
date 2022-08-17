@@ -26,6 +26,7 @@ from email.mime.image import MIMEImage
 from email.parser import Parser
 
 from base64 import b64decode
+import urllib
 import uuid
 
 
@@ -38,7 +39,8 @@ def basename_attach(path, meta):
 def data_attach(data,meta):
     if 'attach_data' not in meta : meta['attach_data'] = {}
     id = uuid.uuid4()
-    meta['attach_data'][id] = b64decode(data)
+    # in my jupyter kernel image data is url quoted
+    meta['attach_data'][id] = b64decode(urllib.parse.unquote(data))
     return id
 
 class MailExporter(HTMLExporter):
@@ -62,7 +64,12 @@ class MailExporter(HTMLExporter):
         config : config
             User configuration instance.
         """
-        super(MailExporter, self).__init__(config=config, **kw)
+        c = Config()
+        c.TemplateExporter.extra_template_paths = \
+            [os.path.join(os.path.dirname(__file__), "templates")]
+        if config:
+            c.merge(config)
+        super(MailExporter, self).__init__(config=c, **kw)
         self.register_filter('basename_attach', basename_attach)
         self.register_filter('data_attach', data_attach)
 
@@ -80,13 +87,13 @@ class MailExporter(HTMLExporter):
     def _raw_mimetypes_default(self):
         return ['text/markdown', 'text/html', '']
 
-    @property
-    def template_path(self):
-        """
-        We want to inherit from HTML template, and have template under
-        `./templates/` so append it to the search path. (see next section)
-        """
-        return super(MailExporter, self).template_path+[os.path.join(os.path.dirname(__file__), "templates")]
+    # @property
+    # def template_path(self):
+    #     """
+    #     We want to inherit from HTML template, and have template under
+    #     `./templates/` so append it to the search path. (see next section)
+    #     """
+    #     return super(MailExporter, self).template_path+[os.path.join(os.path.dirname(__file__), "templates")]
 
 
     def from_notebook_node(self, nb, resources=None, **kw):
