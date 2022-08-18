@@ -48,7 +48,7 @@ class MailExporter(HTMLExporter):
     Exports to a mail document (.mail)
     """
 
-    headers = Dict(help="Mail Headers", traits={
+    headers = Dict(help="Mail Headers", per_key_traits={
         'from': Unicode(help="From header"),
         'to': Unicode(help="Comma-separated To header"),
         'cc': Unicode(help="Comma-separated Cc header"),
